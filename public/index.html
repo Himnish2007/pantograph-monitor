@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Himnish PCMS - Pantograph Condition Monitoring</title>
+<link rel="stylesheet" href="/css/style.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.4/chart.umd.min.js"></script>
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+</head>
+<body>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="loginScreen" class="login-screen">
+  <div class="login-card">
+    <div class="login-brand">
+      <img src="/images/himnish-logo.png" alt="Himnish Limited" class="brand-logo" />
+      <p class="tagline">Innovating &middot; Monitoring &middot; Transforming Railways</p>
+    </div>
+    <h2>Pantograph Condition Monitoring System</h2>
+    <form id="loginForm">
+      <label>Username</label>
+      <input type="text" id="loginUsername" required autocomplete="username" />
+      <label>Password</label>
+      <input type="password" id="loginPassword" required autocomplete="current-password" />
+      <button type="submit">Sign In</button>
+      <p id="loginError" class="error-msg"></p>
+    </form>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" class="app hidden">
+  <header class="topbar">
+    <div class="topbar-left">
+      <img src="/images/himnish-logo.png" alt="Himnish Limited" class="topbar-logo" />
+      <div>
+        <div class="brand-title">HIMNISH <span>PCMS</span></div>
+        <div class="brand-sub">Pantograph Condition Monitoring</div>
+      </div>
+    </div>
+    <div class="topbar-mid">
+      <span class="unit-badge" id="unitBadge">--</span>
+      <span class="conn-badge" id="connBadge"><i class="dot"></i> Connecting...</span>
+    </div>
+    <div class="topbar-right">
+      <span id="userLabel"></span>
+      <button id="logoutBtn" class="btn-ghost">Logout</button>
+    </div>
+  </header>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="live">Live Monitoring</button>
+    <button class="tab-btn" data-tab="trends">Trends</button>
+    <button class="tab-btn" data-tab="alerts">Alerts</button>
+    <button class="tab-btn" data-tab="ai">AI Insights</button>
+    <button class="tab-btn" data-tab="health">Health Index</button>
+    <button class="tab-btn" data-tab="admin" id="adminTabBtn">Admin</button>
+  </nav>
+
+  <main class="content">
+
+    <!-- LIVE MONITORING -->
+    <section id="tab-live" class="tab-panel active">
+      <div class="card-grid">
+        <div class="metric-card">
+          <div class="metric-label">Contact Force</div>
+          <div class="metric-value" id="mvForce">--</div>
+          <div class="metric-unit">N</div>
+          <div class="metric-range" id="mrForce"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Carbon Strip Wear</div>
+          <div class="metric-value" id="mvWear">--</div>
+          <div class="metric-unit">%</div>
+          <div class="metric-range" id="mrWear"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Height</div>
+          <div class="metric-value" id="mvHeight">--</div>
+          <div class="metric-unit">mm</div>
+          <div class="metric-range" id="mrHeight"></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">Current</div>
+          <div class="metric-value" id="mvCurrent">--</div>
+          <div class="metric-unit">A</div>
+          <div class="metric-range" id="mrCurrent"></div>
+        </div>
+      </div>
+      <div class="last-updated">Last update: <span id="lastUpdated">--</span></div>
+    </section>
+
+    <!-- TRENDS -->
+    <section id="tab-trends" class="tab-panel">
+      <div class="panel-header">
+        <h3>Historical Trends</h3>
+        <select id="trendsRange">
+          <option value="1">Last 1 hour</option>
+          <option value="6">Last 6 hours</option>
+          <option value="24" selected>Last 24 hours</option>
+          <option value="168">Last 7 days</option>
+        </select>
+      </div>
+      <div class="chart-box"><canvas id="chartForce"></canvas></div>
+      <div class="chart-box"><canvas id="chartWear"></canvas></div>
+      <div class="chart-box"><canvas id="chartHeight"></canvas></div>
+      <div class="chart-box"><canvas id="chartCurrent"></canvas></div>
+    </section>
+
+    <!-- ALERTS -->
+    <section id="tab-alerts" class="tab-panel">
+      <div class="panel-header">
+        <h3>Alerts</h3>
+        <label class="checkbox-label"><input type="checkbox" id="activeOnlyToggle" /> Active only</label>
+      </div>
+      <table class="data-table" id="alertsTable">
+        <thead><tr><th>Time</th><th>Parameter</th><th>Severity</th><th>Message</th><th>Status</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+    <!-- AI INSIGHTS -->
+    <section id="tab-ai" class="tab-panel">
+      <div class="card-grid two-col">
+        <div class="ai-card">
+          <h3>Carbon Strip Replacement Prediction</h3>
+          <div class="ai-metric"><span>Wear rate:</span> <b id="aiWearRate">--</b> %/day</div>
+          <div class="ai-metric"><span>Days to replacement:</span> <b id="aiDaysLeft">--</b></div>
+          <div class="ai-metric"><span>Predicted date:</span> <b id="aiPredDate">--</b></div>
+          <div class="ai-metric"><span>Confidence:</span> <b id="aiConfidence">--</b></div>
+        </div>
+        <div class="ai-card">
+          <h3>OHE Contact Quality Analysis</h3>
+          <div class="quality-score" id="aiQualityScore">--</div>
+          <div class="quality-label" id="aiQualityLabel">--</div>
+          <div class="ai-breakdown" id="aiBreakdown"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- HEALTH INDEX -->
+    <section id="tab-health" class="tab-panel">
+      <div class="health-hero">
+        <div class="health-score" id="healthScore">--</div>
+        <div class="health-label" id="healthLabel">--</div>
+      </div>
+      <div class="chart-box"><canvas id="chartHealth"></canvas></div>
+    </section>
+
+    <!-- ADMIN -->
+    <section id="tab-admin" class="tab-panel">
+      <div class="panel-header"><h3>Threshold Configuration</h3></div>
+      <table class="data-table" id="thresholdsTable">
+        <thead><tr><th>Parameter</th><th>Value</th><th>Updated By</th><th>Action</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="panel-header"><h3>User Management</h3></div>
+      <form id="createUserForm" class="inline-form">
+        <input type="text" id="newUsername" placeholder="Username" required />
+        <input type="password" id="newPassword" placeholder="Password" required />
+        <select id="newRole">
+          <option value="viewer">Viewer</option>
+          <option value="engineer">Engineer</option>
+          <option value="admin">Admin</option>
+        </select>
+        <button type="submit">Add User</button>
+      </form>
+      <table class="data-table" id="usersTable">
+        <thead><tr><th>Username</th><th>Role</th><th>Created</th><th></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </section>
+
+  </main>
+</div>
+
+<script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,25 @@
+{
+  "name": "pantograph-monitoring-system",
+  "version": "1.0.0",
+  "description": "Himnish Limited - AI Based Pantograph Condition Monitoring System (PCMS) for Indian Railways",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "better-sqlite3": "^11.3.0",
+    "modbus-serial": "^8.0.16",
+    "socket.io": "^4.7.5",
+    "jsonwebtoken": "^9.0.2",
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.4.5",
+    "cors": "^2.8.5",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

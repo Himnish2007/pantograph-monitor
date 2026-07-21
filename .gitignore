@@ -1,0 +1,6 @@
+node_modules/
+.env
+db/pantograph.db
+db/pantograph.db-*
+*.log
+.DS_Store
