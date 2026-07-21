@@ -332,4 +332,16 @@ document.querySelectorAll('.tab-btn').forEach((btn) => {
 });
 
 // ---------------- Boot ----------------
-tryAutoLogin();
+(async function boot() {
+  try {
+    const config = await fetch(API + '/config').then((r) => r.json());
+    if (config.authDisabled) {
+      currentUser = { username: 'Guest', role: 'admin' };
+      initApp();
+      return;
+    }
+  } catch (e) {
+    // config check failed, fall through to normal login flow
+  }
+  tryAutoLogin();
+})();
