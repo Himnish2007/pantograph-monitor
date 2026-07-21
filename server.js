@@ -7,6 +7,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const { Server } = require('socket.io');
 
+const bcrypt = require('bcryptjs');
 const db = require('./db');
 const ModbusClient = require('./services/modbusClient');
 const alertEngine = require('./services/alertEngine');
@@ -49,6 +50,28 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
+
+// ---- Bootstrap first admin user (runs inside the actual server process,
+//      so it always writes to the real database this server is using -
+//      avoids the classic "seed ran locally, prod DB never got the user" trap) ----
+(function bootstrapAdmin() {
+  const userCount = db.prepare('SELECT COUNT(*) AS c FROM users').get().c;
+  if (userCount > 0) return;
+
+  const username = process.env.ADMIN_USERNAME;
+  const password = process.env.ADMIN_PASSWORD;
+  if (!username || !password) {
+    console.warn(
+      '[Bootstrap] No users exist yet and ADMIN_USERNAME/ADMIN_PASSWORD are not set. ' +
+      'Set them in your environment variables and redeploy to create the first admin login.'
+    );
+    return;
+  }
+
+  const hash = bcrypt.hashSync(password, 10);
+  db.prepare('INSERT INTO users (username, password_hash, role) VALUES (?, ?, ?)').run(username, hash, 'admin');
+  console.log(`[Bootstrap] Created first admin user "${username}" from ADMIN_USERNAME/ADMIN_PASSWORD env vars.`);
+})();
 
 // ---- DB prepared statements for the poll loop ----
 const insertReading = db.prepare(`
