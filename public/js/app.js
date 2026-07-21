@@ -10,15 +10,14 @@ async function apiCall(path, opts = {}) {
   const headers = Object.assign({ 'Content-Type': 'application/json' }, opts.headers || {});
   if (token) headers['Authorization'] = `Bearer ${token}`;
   const res = await fetch(API + path, { ...opts, headers });
-  if (res.status === 401) {
+  const data = await res.json().catch(() => null);
+  if (res.status === 401 && path !== '/auth/login') {
     logout();
     throw new Error('Session expired');
   }
-  const data = await res.json().catch(() => null);
   if (!res.ok) throw new Error((data && data.error) || 'Request failed');
   return data;
 }
-
 document.getElementById('loginForm').addEventListener('submit', async (e) => {
   e.preventDefault();
   const username = document.getElementById('loginUsername').value.trim();
