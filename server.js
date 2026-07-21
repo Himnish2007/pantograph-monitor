@@ -22,6 +22,11 @@ const app = express();
 const server = http.createServer(app);
 const io = new Server(server, { cors: { origin: '*' } });
 
+// Railway (and most PaaS platforms) sit behind a reverse proxy and set
+// X-Forwarded-For. Express needs to be told to trust it, otherwise
+// express-rate-limit throws on every request.
+app.set('trust proxy', 1);
+
 const UNIT_ID = process.env.UNIT_ID || 'PANTO-001';
 const PORT = process.env.PORT || 3000;
 
